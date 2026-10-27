@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emotion Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b2250;--card:#fff;--soft:#f3efff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#2b2250;--card:#fff;--soft:#f3efff}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;font-family:'Prompt',system-ui,sans-serif;color:var(--ink);background:linear-gradient(135deg,#ff6b9d,#c44dff,#4d79ff,#27d3c3);background-size:300% 300%;animation:bg 14s ease infinite;perspective:1200px;background-color:#7b4dff}
+@keyframes bg{50%{background-position:100% 100%}}
+#app{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:2.2rem;margin:.2em 0;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25)}
+.top{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;gap:8px;flex-wrap:wrap}
+.pill{background:rgba(0,0,0,.25);padding:6px 14px;border-radius:99px}
+.panel{background:var(--card);border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 12px 0 rgba(0,0,0,.2),0 20px 40px rgba(0,0,0,.25);transform:rotateX(2deg)}
+.btn{font:inherit;font-weight:800;border:0;border-radius:16px;padding:12px 18px;color:#fff;background:#ff7a1a;box-shadow:0 6px 0 #b34a00;cursor:pointer;transition:.1s;margin:4px}
+.btn:hover{transform:translateY(-2px) rotateX(10deg)}.btn:active{transform:translateY(5px);box-shadow:0 1px 0 #b34a00}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.g{background:#1fb86a;box-shadow:0 6px 0 #0e7a43}.btn.r{background:#e8384f;box-shadow:0 6px 0 #9c1429}.btn.b{background:#3b6bff;box-shadow:0 6px 0 #1e3fa8}.btn.p{background:#9b4dff;box-shadow:0 6px 0 #5f23b3}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px}
+.card{height:120px;perspective:600px;cursor:pointer}
+.in{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s}
+.card.flip .in{transform:rotateY(180deg)}.card:not(.flip):hover .in{transform:rotateX(12deg) rotateY(-12deg)}
+.f,.k{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 0 rgba(0,0,0,.2)}
+.f{background:linear-gradient(135deg,#ffcf33,#ff6b9d);font-size:2.6rem;color:#fff;font-weight:800}
+.k{background:#fff7d6;font-size:3.6rem;transform:rotateY(180deg)}
+.card.ok .k{background:#c9f7dc;outline:5px solid #1fb86a}.card.bad .k{background:#ffd5da;outline:5px solid #e8384f}
+.q{font-size:1.5rem;font-weight:800;text-align:center;padding:22px;border-radius:20px;background:linear-gradient(135deg,#e6dcff,#d3f5ff);margin-bottom:12px;box-shadow:0 8px 0 rgba(0,0,0,.15);transform:rotateX(6deg)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px}
+.fb{border-radius:16px;padding:12px 14px;margin-top:12px;font-size:.95rem}
+.fb.ok{background:#d8f8e6}.fb.no{background:#ffe3e6}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:8px;border-bottom:2px solid #eee;text-align:left;vertical-align:top}
+th{background:var(--soft)}.wrap{overflow-x:auto}
+.big{font-size:3rem;text-align:center}
+.bar{height:12px;background:rgba(255,255,255,.35);border-radius:9px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:#ffe14d;transition:width .4s}
+</style></head><body>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s),sh=a=>[...a].sort(()=>Math.random()-.5);
+const E=[
+['frustrated','😫','annoyed because you cannot do or fix something','หงุดหงิด (ทำอะไรไม่สำเร็จ)'],
+['nervous','😬','worried or a little afraid about something that will happen','ประหม่า / กังวล'],
+['angry','😠','having strong feelings against someone or something','โกรธ'],
+['depressed','😢','very sad for a long time','เศร้ามาก / ซึมเศร้า'],
+['happy','😄','feeling joy and pleasure','มีความสุข'],
+['mad','😡','very angry (informal, stronger than angry)','โกรธมาก (ภาษาพูด)'],
+['embarrassed','😳','shy or ashamed in front of other people','อาย / เขินอาย'],
+['shocked','😱','very surprised by something bad or unexpected','ตกใจ / ช็อก'],
+['disappointed','😞','sad because things were not as good as you hoped','ผิดหวัง'],
+['calm','😌','quiet and relaxed, not worried','สงบ / ใจเย็น']].map(a=>({w:a[0],e:a[1],en:a[2],th:a[3]}));
+const D=Object.fromEntries(E.map(x=>[x.w,x]));
+const M=[
+['She’s got a screw loose.','mad','means she is acting crazy or strangely','หมายถึง เธอทำตัวแปลก ๆ / บ้า ๆ บอ ๆ'],
+['I’ve got butterflies in my stomach.','nervous','means you feel nervous before something important','หมายถึง รู้สึกประหม่า ใจสั่น (เช่น ก่อนขึ้นพูด)'],
+['I’m really cut up.','depressed','means you are very upset and sad','หมายถึง เสียใจมาก ๆ'],
+['It makes my blood boil.','angry','means something makes you extremely angry','หมายถึง ทำให้โกรธจนเลือดขึ้นหน้า'],
+['I don’t know where to put myself.','embarrassed','means you feel so embarrassed you want to hide','หมายถึง อายมากจนไม่รู้จะเอาหน้าไปไว้ที่ไหน']
+].map(a=>({m:a[0],a:a[1],en:a[2],th:a[3]}));
+// Part 3 items: [sentence, answer, options, EN reason, TH reason]
+const P3=[
+['I tried the puzzle ten times but I couldn’t solve it. I feel very ______.','frustrated',['frustrated','calm','happy','shocked'],'“Frustrated” = annoyed because you cannot do something.','“frustrated” = หงุดหงิดเพราะทำไม่สำเร็จ'],
+['Everyone was afraid in the storm, but Mai stayed ______ and breathed slowly.','calm',['angry','calm','mad','disappointed'],'“Calm” = relaxed and quiet, not worried.','“calm” = สงบ ใจเย็น'],
+['I heard the news about the accident and I was ______.','shocked',['shocked','happy','calm','embarrassed'],'“Shocked” = very surprised by bad or unexpected news.','“shocked” = ตกใจ ช็อก กับข่าวร้ายหรือเรื่องไม่คาดคิด'],
+['Tom studied hard but failed the test. He is ______.','disappointed',['happy','calm','disappointed','nervous'],'“Disappointed” = sad because the result was not what you hoped.','“disappointed” = ผิดหวังเพราะผลไม่เป็นอย่างที่หวัง'],
+['I won the contest! I’m so ______!','happy',['depressed','happy','mad','nervous'],'“Happy” = feeling joy. Winning is good news.','“happy” = มีความสุข การชนะเป็นเรื่องดี'],
+['Before my speech, I have ______ in my stomach.','butterflies',['butterflies','a screw loose','my blood boil','a cut up'],'“Butterflies in my stomach” = feeling nervous.','“butterflies in my stomach” = รู้สึกประหม่า'],
+['When someone cuts in line, it ______.','makes my blood boil',['makes my blood boil','is really cut up','has a screw loose','has butterflies'],'“Makes my blood boil” = makes me very angry.','“makes my blood boil” = ทำให้โกรธมาก'],
+['She talks to the wall and laughs alone. I think she’s got ______.','a screw loose',['butterflies','a screw loose','a blood boil','nowhere to put'],'“She’s got a screw loose” = she acts crazy or strange.','“a screw loose” = ทำตัวแปลก ๆ / บ้า ๆ บอ ๆ'],
+['Her pet died last week, so she is really ______.','cut up',['cut up','happy','a screw loose','butterflies'],'“Really cut up” = very upset and sad.','“really cut up” = เสียใจมาก'],
+['I tripped in front of the whole school. I didn’t know ______.','where to put myself',['where to put myself','a screw loose','my blood boil','butterflies'],'“Know where to put myself” = so embarrassed I want to hide.','“know where to put myself” = อายจนไม่รู้จะเอาหน้าไปไว้ที่ไหน']
+].map(a=>({q:a[0],a:a[1],o:a[2],en:a[3],th:a[4]}));
+
+let S,ac;
+function snd(t){if(S.mute)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+const b=(f,d,ty,v,w)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime+w);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+w+d);o.connect(g);g.connect(ac.destination);o.start(ac.currentTime+w);o.stop(ac.currentTime+w+d)};
+if(t=='ok')[523,659,784,1047].forEach((f,i)=>b(f,.18,'triangle',.2,i*.09));
+if(t=='no'){b(220,.25,'sawtooth',.12,0);b(150,.35,'sawtooth',.12,.2)}
+if(t=='flip')b(500,.07,'square',.07,0);if(t=='go')[392,523,659].forEach((f,i)=>b(f,.2,'triangle',.2,i*.12))}catch(e){}}
+function head(){const t=S.sc.reduce((a,b)=>a+b,0);return `<div class="top"><h1>🎭 Emotion Quest</h1><div><span class="pill">⭐ ${t} / 25</span> <button class="btn b" style="padding:6px 12px" onclick="S.mute=!S.mute;this.textContent=S.mute?'🔇':'🔊'">${S.mute?'🔇':'🔊'}</button></div></div>`}
+function intro(){S={sc:[0,0,0],wrong:[],cor:[0,0,0],mute:false};
+$('#app').innerHTML=`<div class="top"><h1>🎭 Emotion Quest</h1></div><div class="panel"><div class="big">😄😳😡😱😌</div>
+<h2>Welcome! / ยินดีต้อนรับ!</h2><p><b>Part 1</b> Flip the picture cards and match the emotion word. / พลิกการ์ดแล้วจับคู่คำศัพท์อารมณ์</p>
+<p><b>Part 2</b> Match each metaphor with its emotion. / จับคู่สำนวนกับอารมณ์</p>
+<p><b>Part 3</b> Fill in the gap. / เติมคำในช่องว่าง</p><p>Each correct answer = 1 point. ตอบถูก 1 ข้อ = 1 คะแนน (full score 25)</p>
+<button class="btn g" onclick="snd('go');p1()">▶ Start / เริ่มเกม</button></div>`}
+function fbox(ok,en,th){return `<div class="fb ${ok?'ok':'no'}"><b>${ok?'✅ Correct! +1 / ถูกต้อง!':'❌ Not quite / ยังไม่ถูก'}</b>${ok?'':`<br>${en}<br>🇹🇭 ${th}`}</div>`}
+function p1(){let done=0,sel=null;const cards=sh(E);
+$('#app').innerHTML=head()+`<div class="panel"><h2>Part 1: Picture Matching / จับคู่รูปอารมณ์</h2><p>1) Tap a card to flip it. 2) Pick the correct word. / แตะการ์ดแล้วเลือกคำที่ถูกต้อง</p>
+<div class="bar"><i id="pb" style="width:0"></i></div>
+<div class="grid">${cards.map((c,i)=>`<div class="card" id="c${i}" onclick="pick(${i})"><div class="in"><div class="f">?</div><div class="k">${c.e}</div></div></div>`).join('')}</div>
+<h3>Word bank / คลังคำ</h3><div id="wb">${sh(E).map(x=>`<button class="btn p" data-w="${x.w}">${x.w}</button>`).join('')}</div>
+<div id="fb"></div><div id="nx"></div></div>`;
+window.pick=i=>{const el=$('#c'+i);if(el.classList.contains('ok')||el.classList.contains('bad'))return;
+if(sel!==null&&sel!==i)$('#c'+sel).classList.remove('flip');sel=i;el.classList.add('flip');snd('flip')};
+document.querySelectorAll('#wb .btn').forEach(b=>b.onclick=()=>{if(sel===null){$('#fb').innerHTML='<div class="fb no">👆 Flip a card first! / พลิกการ์ดก่อนนะ</div>';return}
+const c=cards[sel],el=$('#c'+sel),w=b.dataset.w;
+if(w==c.w){S.sc[0]++;S.cor[0]++;el.classList.add('ok');snd('ok');b.disabled=true;$('#fb').innerHTML=fbox(true)}
+else{el.classList.add('bad');snd('no');const x=D[w],en=`${c.e} is <b>${c.w}</b> (${c.en}). It is not <b>${w}</b> (${x.en}).`,th=`${c.e} คือ <b>${c.w}</b> (${c.th}) ไม่ใช่ <b>${w}</b> (${x.th})`;
+S.wrong.push({p:'1',q:c.e,y:w,a:c.w,en,th});$('#fb').innerHTML=fbox(false,en,th)}
+sel=null;done++;$('#pb').style.width=done*10+'%';
+if(done==10)$('#nx').innerHTML=`<button class="btn g" onclick="snd('go');quiz(1)">Next: Part 2 ➜</button>`})}
+function quiz(part){const items=part==1?sh(M).map(m=>({q:m.m,a:m.a,o:sh([m.a,...sh(E.map(e=>e.w).filter(w=>w!=m.a&&!['mad','angry','disappointed','frustrated','embarrassed','depressed'].includes(w)||false)).slice(0,0),...sh(['happy','calm','shocked','happy'].filter(w=>w!=m.a)).slice(0,3)].filter((v,i,a)=>a.indexOf(v)==i)),en:m.en,th:m.th,mm:1})):sh(P3);
+fixOpts(items,part);let i=0;
+const show=()=>{const it=items[i];$('#app').innerHTML=head()+`<div class="panel"><h2>${part==1?'Part 2: Metaphor Match / จับคู่สำนวน':'Part 3: Fill the Gap / เติมคำ'}</h2>
+<div class="bar"><i style="width:${i/items.length*100}%"></i></div><p>Question ${i+1} / ${items.length}</p>
+<div class="q">${part==1?'💬 “'+it.q.replace(/\.$/,'')+'”<br><small>Which emotion? / อารมณ์ใด?</small>':it.q.replace('______','<u>&nbsp;&nbsp;&nbsp;?&nbsp;&nbsp;&nbsp;</u>')}</div>
+<div class="opts">${it.o.map(o=>`<button class="btn ${['b','p','g','r'][it.o.indexOf(o)]}" data-o="${o}">${o}</button>`).join('')}</div><div id="fb"></div><div id="nx"></div></div>`;
+document.querySelectorAll('.opts .btn').forEach(b=>b.onclick=()=>{const y=b.dataset.o,ok=y==it.a;document.querySelectorAll('.opts .btn').forEach(x=>x.disabled=true);
+let en,th;if(ok){S.sc[part+1]++;S.cor[part+1]++;snd('ok')}else{snd('no');
+if(it.mm){const d=D[it.a],o=D[y];en=`“${it.q}” ${it.en}, so the answer is <b>${it.a}</b> (${d.en}), not <b>${y}</b> (${o.en}).`;th=`“${it.q}” ${it.th} คำตอบคือ <b>${it.a}</b> (${d.th}) ไม่ใช่ <b>${y}</b> (${o.th})`}
+else{en=`Answer: <b>${it.a}</b>. ${it.en}`;th=`คำตอบ: <b>${it.a}</b> — ${it.th}`}
+S.wrong.push({p:part==1?'2':'3',q:it.q,y,a:it.a,en,th})}
+$('#fb').innerHTML=fbox(ok,en,th);$('#nx').innerHTML=`<button class="btn g" id="n">${i==items.length-1?(part==1?'Next: Part 3 ➜':'See results 🏆'):'Next ➜'}</button>`;
+$('#n').onclick=()=>{snd('go');i++;if(i<items.length)show();else part==1?quiz(2):result()}})};show()}
+function fixOpts(items,part){if(part==1)items.forEach(it=>{const pool=['happy','calm','shocked','disappointed','frustrated'].filter(w=>w!=it.a);it.o=sh([it.a,...sh(pool).slice(0,3)])});else items.forEach(it=>it.o=sh(it.o))}
+function result(){const t=S.sc.reduce((a,b)=>a+b,0),mx=[10,5,10],names=['Part 1: Picture Matching','Part 2: Metaphor Match','Part 3: Fill the Gap'];snd('ok');
+$('#app').innerHTML=head()+`<div class="panel"><div class="big">${t>=20?'🏆':t>=13?'🌟':'💪'}</div><h2 style="text-align:center">Results / ผลคะแนน</h2>
+<div class="wrap"><table><tr><th>Part</th><th>Correct answers / ตอบถูก</th><th>Score / คะแนน</th></tr>
+${names.map((n,i)=>`<tr><td>${n}</td><td>${S.cor[i]} / ${mx[i]}</td><td>${S.sc[i]}</td></tr>`).join('')}
+<tr style="font-weight:800;background:#fff3b8"><td>TOTAL / รวม</td><td>${S.cor.reduce((a,b)=>a+b,0)} / 25</td><td>${t} / 25</td></tr></table></div></div>
+<div class="panel"><h3>Incorrect answers &amp; explanations / คำตอบที่ผิดและคำอธิบาย</h3>
+${S.wrong.length?`<div class="wrap"><table><tr><th>Part</th><th>Question</th><th>Your answer</th><th>Correct</th><th>Explanation (English / ไทย)</th></tr>
+${S.wrong.map(w=>`<tr><td>${w.p}</td><td>${w.q}</td><td>${w.y}</td><td><b>${w.a}</b></td><td>${w.en}<br>🇹🇭 ${w.th}</td></tr>`).join('')}</table></div>`:'<p>🎉 Perfect! No mistakes! / สมบูรณ์แบบ ไม่มีข้อผิด!</p>'}
+<button class="btn g" onclick="snd('go');intro()">🔁 Play again / เล่นอีกครั้ง</button></div>`}
+intro();
+</script></body></html>
